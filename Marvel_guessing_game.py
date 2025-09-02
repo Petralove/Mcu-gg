@@ -402,3 +402,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+st.markdown("---")
+st.markdown("Made with ♥ by petra")
