@@ -228,8 +228,7 @@ def gemini_answer_question(question, character_name):
         "systemInstruction": {"parts": [{"text": system_prompt}]}
     }
 
-    # The API key is provided by the canvas environment
-    api_key = ""
+    api_key = "" # This will be populated by the runtime
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
 
     try:
@@ -495,7 +494,3 @@ def main():
         st.button("Play Again", on_click=reset_game)
 
     st.markdown("---")
-    st.markdown("Made with ♥ by petra")
-
-if __name__ == "__main__":
-    main()
