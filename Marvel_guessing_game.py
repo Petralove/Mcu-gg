@@ -1,5 +1,6 @@
 import streamlit as st
 import random
+import time
 
 # A dictionary of Marvel characters with hints and traits.
 # Traits will be used for the computer's guessing.
@@ -262,6 +263,8 @@ def main():
         game_mode = st.radio("Choose a game mode:", ["I'll guess", "The computer will guess"])
         
         if st.button("Start Game"):
+            with st.spinner('Starting game...'):
+                time.sleep(1)
             st.session_state.game_mode = game_mode
             start_game()
     
@@ -270,19 +273,37 @@ def main():
             user_guesses_mode()
         else:
             computer_guesses_mode()
+            
+        # Display the computer's question history log
+        st.markdown("---")
+        st.markdown("### Computer's Question Log")
+        if st.session_state.computer_question_history:
+            for q_key, answer in st.session_state.computer_question_history:
+                st.write(f"- Computer asked: '{COMPUTER_QUESTIONS[q_key]}'")
+                st.write(f"  Your answer: **{answer}**")
 
     elif st.session_state.game_state == "win":
+        char_image_url = f"https://placehold.co/300x300/F0F2F6/262730?text={st.session_state.secret_character.replace(' ', '+')}"
+        
         if st.session_state.game_mode == "I'll guess":
             st.success(f"You win! The character was **{st.session_state.secret_character}**.")
+            st.image(char_image_url, caption=st.session_state.secret_character)
         else:
             st.success(f"The computer wins! The character was **{st.session_state.secret_character}**.")
+            st.image(char_image_url, caption=st.session_state.secret_character)
+
         st.button("Play Again", on_click=reset_game)
 
     elif st.session_state.game_state == "lose":
+        char_image_url = f"https://placehold.co/300x300/F0F2F6/262730?text={st.session_state.secret_character.replace(' ', '+')}"
+        
         if st.session_state.game_mode == "I'll guess":
             st.error(f"You lose! The character was **{st.session_state.secret_character}**.")
+            st.image(char_image_url, caption=st.session_state.secret_character)
         else:
             st.error(f"The computer loses! The character was **{st.session_state.secret_character}**.")
+            st.image(char_image_url, caption=st.session_state.secret_character)
+            
         st.button("Play Again", on_click=reset_game)
 
 if __name__ == "__main__":
