@@ -53,6 +53,16 @@ MARVEL_CHARACTERS = {
         "I was a U.S. Air Force pilot.",
         "I can fly and shoot energy blasts from my hands.",
         "My real name is Carol Danvers."
+    ],
+    "Wolverine": [
+        "I have adamantium claws and an incredible healing factor.",
+        "I am part of the X-Men.",
+        "My real name is Logan."
+    ],
+    "Deadpool": [
+        "I am a merc with a mouth and I know I'm in a comic book.",
+        "I have an incredible healing factor.",
+        "My alter-ego is Wade Wilson."
     ]
 }
 
@@ -64,6 +74,8 @@ def reset_game():
     st.session_state.secret_character = None
     st.session_state.computer_guesses = []
     st.session_state.current_hint_index = 0
+    st.session_state.computer_turn_state = "making_guess"
+    st.session_state.last_user_hint = ""
 
 def start_game():
     """Initializes the game and chooses a character."""
@@ -106,24 +118,25 @@ def computer_guesses_mode():
     elif st.session_state.current_hint_index > 0:
         st.info(f"Last hint you gave: '{st.session_state.last_user_hint}'")
 
-    if st.button("Computer, Make a Guess!"):
-        if st.session_state.tries_left > 0:
+    if st.session_state.computer_turn_state == "making_guess":
+        if st.button("Computer, Make a Guess!", key="computer_guess_button"):
             st.session_state.tries_left -= 1
-            computer_guess = random.choice(list(MARVEL_CHARACTERS.keys()))
-            st.session_state.computer_guesses.append(computer_guess)
-            st.write(f"The computer guesses: **{computer_guess}**")
-            
-            # The user provides feedback
-            st.warning("Please tell the computer if the guess is correct or not.")
-            is_correct = st.radio("Is this your character?", ("Yes", "No"), key=f"feedback_{len(st.session_state.computer_guesses)}")
-            
+            st.session_state.computer_guess_this_turn = random.choice(list(MARVEL_CHARACTERS.keys()))
+            st.session_state.computer_guesses.append(st.session_state.computer_guess_this_turn)
+            st.session_state.computer_turn_state = "waiting_for_feedback"
+    elif st.session_state.computer_turn_state == "waiting_for_feedback":
+        st.write(f"The computer guesses: **{st.session_state.computer_guess_this_turn}**")
+        st.warning("Please tell the computer if the guess is correct or not.")
+        is_correct = st.radio("Is this your character?", ("Yes", "No"), key="user_feedback_radio")
+
+        if st.button("Confirm Feedback", key="confirm_feedback_button"):
             if is_correct == "Yes":
                 st.session_state.game_state = "win"
             elif st.session_state.tries_left <= 0:
                 st.session_state.game_state = "lose"
-        else:
-            st.session_state.game_state = "lose"
-    
+            else:
+                st.session_state.computer_turn_state = "making_guess"
+
     st.write(f"Tries left: {st.session_state.tries_left}")
     st.markdown("---")
     st.write("Computer's past guesses:")
@@ -140,8 +153,7 @@ def main():
     # Initialize session state variables if they don't exist
     if "game_state" not in st.session_state:
         reset_game()
-        st.session_state.last_user_hint = ""
-
+    
     # Mode selection and game start
     if st.session_state.game_state == "not_started":
         st.write("Welcome to the Marvel Guessing Game! Choose your role.")
@@ -150,7 +162,6 @@ def main():
         if st.button("Start Game"):
             st.session_state.game_mode = game_mode
             start_game()
-            st.experimental_rerun()
     
     elif st.session_state.game_state == "in_progress":
         if st.session_state.game_mode == "I'll guess":
