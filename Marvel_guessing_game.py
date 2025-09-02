@@ -97,8 +97,9 @@ def user_guesses_mode():
         st.session_state.current_hint_index += 1
 
     # Question and Answer section
+    st.markdown("### Ask Questions")
     if st.session_state.questions_asked < 20:
-        st.write(f"Ask a question to help you guess! ({20 - st.session_state.questions_asked} questions remaining)")
+        st.write(f"Use this box to ask questions and get 'Yes' or 'No' answers. ({20 - st.session_state.questions_asked} questions remaining)")
         user_question = st.text_input("Your question:", key="user_question_input")
         
         if st.button("Ask Question"):
@@ -122,8 +123,8 @@ def user_guesses_mode():
     st.markdown("---")
 
     # Guessing section
-    st.markdown("### Make Your Guess")
-    st.write("Enter the character's name to guess.")
+    st.markdown("### Make Your Final Guess")
+    st.write("Enter the character's full name to guess.")
     user_guess = st.text_input("Your guess:", value=st.session_state.user_guess_input_val, key="user_guess_input")
     
     if st.button("Submit Guess"):
