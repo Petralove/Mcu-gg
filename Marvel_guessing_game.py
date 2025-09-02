@@ -2,6 +2,7 @@ import streamlit as st
 import random
 import time
 import json
+import requests
 
 # A dictionary of Marvel characters with hints and structured traits.
 # Traits are now in a dictionary for more reliable computer guessing.
@@ -232,7 +233,8 @@ def gemini_answer_question(question, character_name):
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
 
     try:
-        response = st.experimental_rerun_with_fetch(api_url, data=payload)
+        response = requests.post(api_url, json=payload)
+        response.raise_for_status() # Raise an exception for bad status codes
         response_json = response.json()
         
         # Extract the generated text
@@ -241,8 +243,11 @@ def gemini_answer_question(question, character_name):
         else:
             return "I couldn't process that question."
 
+    except requests.exceptions.RequestException as e:
+        st.error(f"A request error occurred: {e}")
+        return "I am unable to answer at this time. Please try again."
     except Exception as e:
-        st.error(f"An error occurred: {e}")
+        st.error(f"An unexpected error occurred: {e}")
         return "I am unable to answer at this time. Please try again."
 
 def reset_game():
@@ -494,3 +499,7 @@ def main():
         st.button("Play Again", on_click=reset_game)
 
     st.markdown("---")
+    st.markdown("Made with ♥ by petra")
+
+if __name__ == "__main__":
+    main()
