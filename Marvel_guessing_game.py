@@ -1,69 +1,114 @@
 import streamlit as st
 import random
 
-# A dictionary of Marvel characters with hints.
-# This serves as our game's "database".
+# A dictionary of Marvel characters with hints and traits.
+# Traits will be used for the computer's guessing.
 MARVEL_CHARACTERS = {
-    "Iron Man": [
-        "I am a genius, billionaire, playboy, philanthropist.",
-        "My suit is powered by an arc reactor.",
-        "I am the leader of the Avengers and often referred to as 'Tony'."
-    ],
-    "Captain America": [
-        "I am a super-soldier from World War II.",
-        "My primary weapon is a vibranium shield.",
-        "I was frozen in ice for decades before being revived."
-    ],
-    "Hulk": [
-        "When I get angry, I transform into a giant green monster.",
-        "I am a brilliant scientist named Bruce Banner.",
-        "My catchphrase is 'Hulk Smash!'"
-    ],
-    "Thor": [
-        "I am a prince from Asgard, often called the God of Thunder.",
-        "My primary weapon is a powerful hammer, Mjolnir.",
-        "I have a brother named Loki."
-    ],
-    "Black Widow": [
-        "I am a highly skilled spy and assassin.",
-        "I have a red-colored hair.",
-        "I am a founding member of the Avengers, but I don't have superpowers."
-    ],
-    "Spider-Man": [
-        "My powers come from a radioactive spider bite.",
-        "I can shoot webs from my wrists.",
-        "My alter-ego is Peter Parker."
-    ],
-    "Black Panther": [
-        "I am the king and protector of the fictional African nation of Wakanda.",
-        "My suit is made of vibranium.",
-        "I have a sister named Shuri."
-    ],
-    "Doctor Strange": [
-        "I am a Master of the Mystic Arts.",
-        "I was a brilliant surgeon before my accident.",
-        "My cloak has a life of its own."
-    ],
-    "Ant-Man": [
-        "I can shrink to the size of an ant and also become a giant.",
-        "My suit is made by Dr. Hank Pym.",
-        "My alter-ego is Scott Lang."
-    ],
-    "Captain Marvel": [
-        "I was a U.S. Air Force pilot.",
-        "I can fly and shoot energy blasts from my hands.",
-        "My real name is Carol Danvers."
-    ],
-    "Wolverine": [
-        "I have adamantium claws and an incredible healing factor.",
-        "I am part of the X-Men.",
-        "My real name is Logan."
-    ],
-    "Deadpool": [
-        "I am a merc with a mouth and I know I'm in a comic book.",
-        "I have an incredible healing factor.",
-        "My alter-ego is Wade Wilson."
-    ]
+    "Iron Man": {
+        "hints": [
+            "I am a genius, billionaire, playboy, philanthropist.",
+            "My suit is powered by an arc reactor.",
+            "I am the leader of the Avengers and often referred to as 'Tony'."
+        ],
+        "traits": ["male", "hero", "avenger", "human", "genius", "weaponized suit"]
+    },
+    "Captain America": {
+        "hints": [
+            "I am a super-soldier from World War II.",
+            "My primary weapon is a vibranium shield.",
+            "I was frozen in ice for decades before being revived."
+        ],
+        "traits": ["male", "hero", "avenger", "super-soldier", "human", "shield"]
+    },
+    "Hulk": {
+        "hints": [
+            "When I get angry, I transform into a giant green monster.",
+            "I am a brilliant scientist named Bruce Banner.",
+            "My catchphrase is 'Hulk Smash!'"
+        ],
+        "traits": ["male", "hero", "avenger", "green", "human"]
+    },
+    "Thor": {
+        "hints": [
+            "I am a prince from Asgard, often called the God of Thunder.",
+            "My primary weapon is a powerful hammer, Mjolnir.",
+            "I have a brother named Loki."
+        ],
+        "traits": ["male", "hero", "avenger", "god", "hammer"]
+    },
+    "Black Widow": {
+        "hints": [
+            "I am a highly skilled spy and assassin.",
+            "I have a red-colored hair.",
+            "I am a founding member of the Avengers, but I don't have superpowers."
+        ],
+        "traits": ["female", "hero", "avenger", "human"]
+    },
+    "Spider-Man": {
+        "hints": [
+            "My powers come from a radioactive spider bite.",
+            "I can shoot webs from my wrists.",
+            "My alter-ego is Peter Parker."
+        ],
+        "traits": ["male", "hero", "human", "superpowers", "teenager", "webs"]
+    },
+    "Black Panther": {
+        "hints": [
+            "I am the king and protector of the fictional African nation of Wakanda.",
+            "My suit is made of vibranium.",
+            "I have a sister named Shuri."
+        ],
+        "traits": ["male", "hero", "king", "vibranium", "human"]
+    },
+    "Doctor Strange": {
+        "hints": [
+            "I am a Master of the Mystic Arts.",
+            "I was a brilliant surgeon before my accident.",
+            "My cloak has a life of its own."
+        ],
+        "traits": ["male", "hero", "sorcerer", "magic"]
+    },
+    "Ant-Man": {
+        "hints": [
+            "I can shrink to the size of an ant and also become a giant.",
+            "My suit is made by Dr. Hank Pym.",
+            "My alter-ego is Scott Lang."
+        ],
+        "traits": ["male", "hero", "human", "shrinking", "giant"]
+    },
+    "Captain Marvel": {
+        "hints": [
+            "I was a U.S. Air Force pilot.",
+            "I can fly and shoot energy blasts from my hands.",
+            "My real name is Carol Danvers."
+        ],
+        "traits": ["female", "hero", "human", "superpowers", "flight"]
+    },
+    "Wolverine": {
+        "hints": [
+            "I have adamantium claws and an incredible healing factor.",
+            "I am part of the X-Men.",
+            "My real name is Logan."
+        ],
+        "traits": ["male", "hero", "mutant", "claws", "healing factor"]
+    },
+    "Deadpool": {
+        "hints": [
+            "I am a merc with a mouth and I know I'm in a comic book.",
+            "I have an incredible healing factor.",
+            "My alter-ego is Wade Wilson."
+        ],
+        "traits": ["male", "anti-hero", "mercenary", "healing factor"]
+    }
+}
+
+# Questions for the computer to ask
+COMPUTER_QUESTIONS = {
+    "gender": "Is your character a male?",
+    "affiliation": "Is your character an Avenger?",
+    "type": "Does your character have superpowers?",
+    "weapon": "Does your character use a special weapon?",
+    "ability": "Does your character have a healing factor?"
 }
 
 def reset_game():
@@ -79,6 +124,10 @@ def reset_game():
     st.session_state.user_question_history = []
     st.session_state.questions_asked = 0
     st.session_state.user_guess_input_val = ""
+    st.session_state.possible_characters = list(MARVEL_CHARACTERS.keys())
+    st.session_state.question_asked_this_turn = None
+    st.session_state.computer_questions_asked = 0
+    st.session_state.computer_question_history = []
 
 def start_game():
     """Initializes the game and chooses a character."""
@@ -93,7 +142,7 @@ def user_guesses_mode():
     
     # Give a new hint every 5 tries
     if st.session_state.tries_left % 5 == 0 and st.session_state.tries_left < 15 and st.session_state.current_hint_index < 3:
-        st.info(f"Hint {st.session_state.current_hint_index + 1}: {MARVEL_CHARACTERS[st.session_state.secret_character][st.session_state.current_hint_index]}")
+        st.info(f"Hint {st.session_state.current_hint_index + 1}: {MARVEL_CHARACTERS[st.session_state.secret_character]['hints'][st.session_state.current_hint_index]}")
         st.session_state.current_hint_index += 1
 
     # Question and Answer section
@@ -106,7 +155,7 @@ def user_guesses_mode():
             if user_question:
                 st.session_state.questions_asked += 1
                 # Simple keyword-based logic to answer the question
-                found = any(word.lower() in ' '.join(MARVEL_CHARACTERS[st.session_state.secret_character]).lower() for word in user_question.split())
+                found = any(word.lower() in ' '.join(MARVEL_CHARACTERS[st.session_state.secret_character]['hints']).lower() for word in user_question.split())
                 answer = "Yes" if found else "No"
                 st.session_state.user_question_history.append((user_question, answer))
     else:
@@ -140,41 +189,61 @@ def user_guesses_mode():
             st.error("Incorrect guess. Try again!")
 
 def computer_guesses_mode():
-    """Handles the game logic when the computer is guessing."""
+    """Handles the game logic when the computer is guessing by asking questions."""
     st.subheader("The Computer is Guessing")
 
-    # The user gives a hint to the computer every 5 tries.
-    if st.session_state.tries_left % 5 == 0 and st.session_state.tries_left < 15 and st.session_state.current_hint_index < 3:
-        user_hint = st.text_input(f"The computer has made {15 - st.session_state.tries_left} guesses. Give it a hint:")
-        st.session_state.current_hint_index += 1
-        st.session_state.last_user_hint = user_hint
-    elif st.session_state.current_hint_index > 0:
-        st.info(f"Last hint you gave: '{st.session_state.last_user_hint}'")
+    if st.session_state.computer_questions_asked >= 15:
+        st.session_state.game_state = "lose"
+        st.error(f"The computer has run out of questions and loses!")
+        return
 
-    if st.session_state.computer_turn_state == "making_guess":
-        if st.button("Computer, Make a Guess!", key="computer_guess_button"):
-            st.session_state.tries_left -= 1
-            st.session_state.computer_guess_this_turn = random.choice(list(MARVEL_CHARACTERS.keys()))
-            st.session_state.computer_guesses.append(st.session_state.computer_guess_this_turn)
-            st.session_state.computer_turn_state = "waiting_for_feedback"
-    elif st.session_state.computer_turn_state == "waiting_for_feedback":
-        st.write(f"The computer guesses: **{st.session_state.computer_guess_this_turn}**")
-        st.warning("Please tell the computer if the guess is correct or not.")
-        is_correct = st.radio("Is this your character?", ("Yes", "No"), key="user_feedback_radio")
-
-        if st.button("Confirm Feedback", key="confirm_feedback_button"):
-            if is_correct == "Yes":
-                st.session_state.game_state = "win"
-            elif st.session_state.tries_left <= 0:
+    st.write(f"Questions asked: {st.session_state.computer_questions_asked}/15")
+    
+    # Check if the computer has enough info to make a guess
+    if len(st.session_state.possible_characters) == 1:
+        computer_guess = st.session_state.possible_characters[0]
+        st.info(f"The computer's final guess is: **{computer_guess}**")
+        if computer_guess.lower() == st.session_state.secret_character.lower():
+            st.session_state.game_state = "win"
+            st.balloons()
+        else:
+            st.session_state.game_state = "lose"
+    else:
+        # Computer asks a question
+        question_key = random.choice(list(COMPUTER_QUESTIONS.keys()))
+        while question_key in [q[0] for q in st.session_state.computer_question_history]:
+            if len(st.session_state.computer_question_history) >= len(COMPUTER_QUESTIONS):
+                # Computer can't ask any more unique questions
                 st.session_state.game_state = "lose"
-            else:
-                st.session_state.computer_turn_state = "making_guess"
+                st.error("The computer is out of unique questions and loses!")
+                return
+            question_key = random.choice(list(COMPUTER_QUESTIONS.keys()))
+            
+        st.session_state.question_asked_this_turn = question_key
+        st.info(f"The computer asks: **{COMPUTER_QUESTIONS[question_key]}**")
+        
+        user_answer = st.radio("Your answer:", ("Yes", "No"), key="user_answer_radio")
+        
+        if st.button("Submit Answer"):
+            st.session_state.computer_questions_asked += 1
+            st.session_state.computer_question_history.append((question_key, user_answer))
+            
+            # Update the list of possible characters based on the answer
+            trait_name = question_key
+            new_possible_characters = []
+            
+            for char_name in st.session_state.possible_characters:
+                char_traits = MARVEL_CHARACTERS[char_name]['traits']
+                
+                # Check if the character has the trait.
+                has_trait = any(trait.lower() == trait_name for trait in char_traits)
+                
+                # Check based on user's answer
+                if (user_answer == "Yes" and has_trait) or (user_answer == "No" and not has_trait):
+                    new_possible_characters.append(char_name)
 
-    st.write(f"Tries left: {st.session_state.tries_left}")
-    st.markdown("---")
-    st.write("Computer's past guesses:")
-    for guess in st.session_state.computer_guesses:
-        st.write(f"- {guess}")
+            st.session_state.possible_characters = new_possible_characters
+            st.write(f"Possible characters remaining: {len(st.session_state.possible_characters)}")
 
 def main():
     """Main function to run the Streamlit app."""
@@ -203,11 +272,17 @@ def main():
             computer_guesses_mode()
 
     elif st.session_state.game_state == "win":
-        st.success(f"You win! The character was **{st.session_state.secret_character}**.")
+        if st.session_state.game_mode == "I'll guess":
+            st.success(f"You win! The character was **{st.session_state.secret_character}**.")
+        else:
+            st.success(f"The computer wins! The character was **{st.session_state.secret_character}**.")
         st.button("Play Again", on_click=reset_game)
 
     elif st.session_state.game_state == "lose":
-        st.error(f"You lose! The character was **{st.session_state.secret_character}**.")
+        if st.session_state.game_mode == "I'll guess":
+            st.error(f"You lose! The character was **{st.session_state.secret_character}**.")
+        else:
+            st.error(f"The computer loses! The character was **{st.session_state.secret_character}**.")
         st.button("Play Again", on_click=reset_game)
 
 if __name__ == "__main__":
