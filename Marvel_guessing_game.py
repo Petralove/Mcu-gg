@@ -400,8 +400,8 @@ def main():
             
         st.button("Play Again", on_click=reset_game)
 
+    st.markdown("---")
+    st.markdown("Made with ♥ by petra")
+
 if __name__ == "__main__":
     main()
-
-st.markdown("---")
-st.markdown("Made with ♥ by petra")
