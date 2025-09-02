@@ -385,6 +385,57 @@ def computer_guesses_mode():
 
 def main():
     """Main function to run the Streamlit app."""
+    # Apply custom styling
+    st.markdown(
+        """
+        <style>
+            .stApp {
+                background-color: #0d1117;
+                color: #e6edf3;
+            }
+            .st-emotion-cache-1cypcdb {
+                background-color: #21262d;
+                border-radius: 10px;
+                padding: 20px;
+                border: 1px solid #30363d;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            h1 {
+                color: #c90000;
+                text-shadow: 2px 2px 4px #000;
+            }
+            h3 {
+                color: #e8c751;
+            }
+            .stButton>button {
+                background-color: #c90000;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-size: 16px;
+                transition: background-color 0.3s, transform 0.3s;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            }
+            .stButton>button:hover {
+                background-color: #a30000;
+                transform: translateY(-2px);
+            }
+            .st-emotion-cache-16idsys { /* Radio button labels */
+                color: #e6edf3;
+            }
+            .st-emotion-cache-1n1v0tx { /* Text input labels */
+                color: #e6edf3;
+            }
+            .st-emotion-cache-183l91w { /* Text area */
+                background-color: #21262d;
+                color: #e6edf3;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    
     st.set_page_config(page_title="Marvel Guessing Game", layout="centered")
 
     st.title("Guess the Marvel Character")
