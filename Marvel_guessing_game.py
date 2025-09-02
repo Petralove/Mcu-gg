@@ -78,6 +78,7 @@ def reset_game():
     st.session_state.last_user_hint = ""
     st.session_state.user_question_history = []
     st.session_state.questions_asked = 0
+    st.session_state.user_guess_input_val = ""
 
 def start_game():
     """Initializes the game and chooses a character."""
@@ -121,10 +122,13 @@ def user_guesses_mode():
     st.markdown("---")
 
     # Guessing section
-    user_guess = st.text_input("Your guess:", key="user_guess_input")
+    st.markdown("### Make Your Guess")
+    st.write("Enter the character's name to guess.")
+    user_guess = st.text_input("Your guess:", value=st.session_state.user_guess_input_val, key="user_guess_input")
     
     if st.button("Submit Guess"):
         st.session_state.tries_left -= 1
+        st.session_state.user_guess_input_val = ""
         
         if user_guess.lower() == st.session_state.secret_character.lower():
             st.session_state.game_state = "win"
