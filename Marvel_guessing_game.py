@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 import time
+import json
 
 # A dictionary of Marvel characters with hints and structured traits.
 # Traits are now in a dictionary for more reliable computer guessing.
@@ -203,6 +204,48 @@ COMPUTER_QUESTIONS = {
     "is_human": "Is your character human?",
 }
 
+def gemini_answer_question(question, character_name):
+    """Answers a user's question using the Gemini API."""
+    character_info = MARVEL_CHARACTERS[character_name]
+    traits_json = json.dumps(character_info["traits"])
+
+    system_prompt = f"""You are a helpful assistant playing a guessing game. Your role is to act as a secret character and answer a user's yes or no question about yourself.
+
+    - Based on the user's question, determine if the answer is "Yes" or "No" based on the provided character traits.
+    - If the question can be answered with a clear yes/no, just reply with "Yes." or "No.".
+    - Do not add any extra text or conversation.
+    - If you cannot answer the question based on the traits, provide a very concise, one-sentence response like "I don't have enough information to answer that."
+    - Be strict with your yes/no answers and only use the provided traits to determine the answer.
+
+    Here are the character's traits: {traits_json}
+    """
+    
+    user_query = f"The user asked: '{question}'"
+    
+    # Construct the payload for the Gemini API call
+    payload = {
+        "contents": [{"parts": [{"text": user_query}]}],
+        "systemInstruction": {"parts": [{"text": system_prompt}]}
+    }
+
+    # The API key is provided by the canvas environment
+    api_key = ""
+    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
+
+    try:
+        response = st.experimental_rerun_with_fetch(api_url, data=payload)
+        response_json = response.json()
+        
+        # Extract the generated text
+        if response_json and "candidates" in response_json:
+            return response_json["candidates"][0]["content"]["parts"][0]["text"].strip()
+        else:
+            return "I couldn't process that question."
+
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        return "I am unable to answer at this time. Please try again."
+
 def reset_game():
     """Resets the game state to its initial values."""
     st.session_state.game_state = "not_started"
@@ -247,20 +290,20 @@ def user_guesses_mode():
         if st.button("Ask Question"):
             if user_question:
                 st.session_state.questions_asked += 1
-                # Simple keyword-based logic to answer the question
-                found = any(word.lower() in ' '.join(MARVEL_CHARACTERS[st.session_state.secret_character]['hints']).lower() for word in user_question.split())
-                answer = "Yes" if found else "No"
-                st.session_state.user_question_history.append((user_question, answer))
+                with st.spinner("Thinking..."):
+                    answer = gemini_answer_question(user_question, st.session_state.secret_character)
+                
+                if answer in ["Yes.", "No."]:
+                    st.session_state.user_question_history.append((user_question, answer))
+                else:
+                    st.session_state.user_question_history.append((user_question, answer))
     else:
         st.warning("You have used all 20 questions! You can no longer ask for hints.")
 
     # Display the history of questions and answers
     if st.session_state.user_question_history:
         for q, a in st.session_state.user_question_history:
-            if a == "Yes":
-                st.success(f"You asked: '{q}' -> **Yes**")
-            else:
-                st.error(f"You asked: '{q}' -> **No**")
+            st.write(f"You asked: '{q}' -> **{a}**")
 
     st.markdown("---")
 
@@ -401,7 +444,7 @@ def main():
         st.button("Play Again", on_click=reset_game)
 
     st.markdown("---")
-    st.markdown("Made with ♥ by Petra")
+    st.markdown("Made with ♥ by petra")
 
 if __name__ == "__main__":
     main()
