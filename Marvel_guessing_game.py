@@ -76,6 +76,7 @@ def reset_game():
     st.session_state.current_hint_index = 0
     st.session_state.computer_turn_state = "making_guess"
     st.session_state.last_user_hint = ""
+    st.session_state.user_question_history = []
 
 def start_game():
     """Initializes the game and chooses a character."""
@@ -93,6 +94,28 @@ def user_guesses_mode():
         st.info(f"Hint {st.session_state.current_hint_index + 1}: {MARVEL_CHARACTERS[st.session_state.secret_character][st.session_state.current_hint_index]}")
         st.session_state.current_hint_index += 1
 
+    # Question and Answer section
+    st.write("Ask a question to help you guess!")
+    user_question = st.text_input("Your question:", key="user_question_input")
+    
+    if st.button("Ask Question"):
+        if user_question:
+            # Simple keyword-based logic to answer the question
+            found = any(word.lower() in ' '.join(MARVEL_CHARACTERS[st.session_state.secret_character]).lower() for word in user_question.split())
+            answer = "Yes" if found else "No"
+            st.session_state.user_question_history.append((user_question, answer))
+            
+    # Display the history of questions and answers
+    if st.session_state.user_question_history:
+        for q, a in st.session_state.user_question_history:
+            if a == "Yes":
+                st.success(f"You asked: '{q}' -> **Yes**")
+            else:
+                st.error(f"You asked: '{q}' -> **No**")
+
+    st.markdown("---")
+
+    # Guessing section
     user_guess = st.text_input("Your guess:", key="user_guess_input")
     
     if st.button("Submit Guess"):
