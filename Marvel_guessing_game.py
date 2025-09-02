@@ -77,6 +77,7 @@ def reset_game():
     st.session_state.computer_turn_state = "making_guess"
     st.session_state.last_user_hint = ""
     st.session_state.user_question_history = []
+    st.session_state.questions_asked = 0
 
 def start_game():
     """Initializes the game and chooses a character."""
@@ -95,16 +96,20 @@ def user_guesses_mode():
         st.session_state.current_hint_index += 1
 
     # Question and Answer section
-    st.write("Ask a question to help you guess!")
-    user_question = st.text_input("Your question:", key="user_question_input")
-    
-    if st.button("Ask Question"):
-        if user_question:
-            # Simple keyword-based logic to answer the question
-            found = any(word.lower() in ' '.join(MARVEL_CHARACTERS[st.session_state.secret_character]).lower() for word in user_question.split())
-            answer = "Yes" if found else "No"
-            st.session_state.user_question_history.append((user_question, answer))
-            
+    if st.session_state.questions_asked < 20:
+        st.write(f"Ask a question to help you guess! ({20 - st.session_state.questions_asked} questions remaining)")
+        user_question = st.text_input("Your question:", key="user_question_input")
+        
+        if st.button("Ask Question"):
+            if user_question:
+                st.session_state.questions_asked += 1
+                # Simple keyword-based logic to answer the question
+                found = any(word.lower() in ' '.join(MARVEL_CHARACTERS[st.session_state.secret_character]).lower() for word in user_question.split())
+                answer = "Yes" if found else "No"
+                st.session_state.user_question_history.append((user_question, answer))
+    else:
+        st.warning("You have used all 20 questions! You can no longer ask for hints.")
+
     # Display the history of questions and answers
     if st.session_state.user_question_history:
         for q, a in st.session_state.user_question_history:
