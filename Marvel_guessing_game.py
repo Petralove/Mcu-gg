@@ -2,8 +2,8 @@ import streamlit as st
 import random
 import time
 
-# A dictionary of Marvel characters with hints and traits.
-# Traits will be used for the computer's guessing.
+# A dictionary of Marvel characters with hints and structured traits.
+# Traits are now in a dictionary for more reliable computer guessing.
 MARVEL_CHARACTERS = {
     "Iron Man": {
         "hints": [
@@ -11,7 +11,15 @@ MARVEL_CHARACTERS = {
             "My suit is powered by an arc reactor.",
             "I am the leader of the Avengers and often referred to as 'Tony'."
         ],
-        "traits": ["male", "hero", "avenger", "human", "genius", "weaponized suit"]
+        "traits": {
+            "is_male": True,
+            "is_hero": True,
+            "is_avenger": True,
+            "is_human": True,
+            "is_genius": True,
+            "uses_special_weapon": True,
+            "has_healing_factor": False
+        }
     },
     "Captain America": {
         "hints": [
@@ -19,7 +27,15 @@ MARVEL_CHARACTERS = {
             "My primary weapon is a vibranium shield.",
             "I was frozen in ice for decades before being revived."
         ],
-        "traits": ["male", "hero", "avenger", "super-soldier", "human", "shield"]
+        "traits": {
+            "is_male": True,
+            "is_hero": True,
+            "is_avenger": True,
+            "is_super_soldier": True,
+            "is_human": True,
+            "uses_special_weapon": True,
+            "has_healing_factor": False
+        }
     },
     "Hulk": {
         "hints": [
@@ -27,7 +43,15 @@ MARVEL_CHARACTERS = {
             "I am a brilliant scientist named Bruce Banner.",
             "My catchphrase is 'Hulk Smash!'"
         ],
-        "traits": ["male", "hero", "avenger", "green", "human"]
+        "traits": {
+            "is_male": True,
+            "is_hero": True,
+            "is_avenger": True,
+            "is_green": True,
+            "is_human": True,
+            "uses_special_weapon": False,
+            "has_healing_factor": True
+        }
     },
     "Thor": {
         "hints": [
@@ -35,7 +59,14 @@ MARVEL_CHARACTERS = {
             "My primary weapon is a powerful hammer, Mjolnir.",
             "I have a brother named Loki."
         ],
-        "traits": ["male", "hero", "avenger", "god", "hammer"]
+        "traits": {
+            "is_male": True,
+            "is_hero": True,
+            "is_avenger": True,
+            "is_god": True,
+            "uses_special_weapon": True,
+            "has_healing_factor": False
+        }
     },
     "Black Widow": {
         "hints": [
@@ -43,7 +74,14 @@ MARVEL_CHARACTERS = {
             "I have a red-colored hair.",
             "I am a founding member of the Avengers, but I don't have superpowers."
         ],
-        "traits": ["female", "hero", "avenger", "human"]
+        "traits": {
+            "is_male": False,
+            "is_hero": True,
+            "is_avenger": True,
+            "is_human": True,
+            "uses_special_weapon": False,
+            "has_healing_factor": False
+        }
     },
     "Spider-Man": {
         "hints": [
@@ -51,7 +89,14 @@ MARVEL_CHARACTERS = {
             "I can shoot webs from my wrists.",
             "My alter-ego is Peter Parker."
         ],
-        "traits": ["male", "hero", "human", "superpowers", "teenager", "webs"]
+        "traits": {
+            "is_male": True,
+            "is_hero": True,
+            "is_avenger": False, # He is often an ally, but not always a core Avenger
+            "is_human": True,
+            "uses_special_weapon": False,
+            "has_healing_factor": True
+        }
     },
     "Black Panther": {
         "hints": [
@@ -59,7 +104,15 @@ MARVEL_CHARACTERS = {
             "My suit is made of vibranium.",
             "I have a sister named Shuri."
         ],
-        "traits": ["male", "hero", "king", "vibranium", "human"]
+        "traits": {
+            "is_male": True,
+            "is_hero": True,
+            "is_avenger": True,
+            "is_king": True,
+            "is_human": True,
+            "uses_special_weapon": False,
+            "has_healing_factor": False
+        }
     },
     "Doctor Strange": {
         "hints": [
@@ -67,7 +120,15 @@ MARVEL_CHARACTERS = {
             "I was a brilliant surgeon before my accident.",
             "My cloak has a life of its own."
         ],
-        "traits": ["male", "hero", "sorcerer", "magic"]
+        "traits": {
+            "is_male": True,
+            "is_hero": True,
+            "is_avenger": True,
+            "is_sorcerer": True,
+            "is_human": True,
+            "uses_special_weapon": False,
+            "has_healing_factor": False
+        }
     },
     "Ant-Man": {
         "hints": [
@@ -75,7 +136,14 @@ MARVEL_CHARACTERS = {
             "My suit is made by Dr. Hank Pym.",
             "My alter-ego is Scott Lang."
         ],
-        "traits": ["male", "hero", "human", "shrinking", "giant"]
+        "traits": {
+            "is_male": True,
+            "is_hero": True,
+            "is_avenger": True,
+            "is_human": True,
+            "uses_special_weapon": False,
+            "has_healing_factor": False
+        }
     },
     "Captain Marvel": {
         "hints": [
@@ -83,7 +151,14 @@ MARVEL_CHARACTERS = {
             "I can fly and shoot energy blasts from my hands.",
             "My real name is Carol Danvers."
         ],
-        "traits": ["female", "hero", "human", "superpowers", "flight"]
+        "traits": {
+            "is_male": False,
+            "is_hero": True,
+            "is_avenger": True,
+            "is_human": False, # Kree DNA
+            "uses_special_weapon": False,
+            "has_healing_factor": False
+        }
     },
     "Wolverine": {
         "hints": [
@@ -91,7 +166,15 @@ MARVEL_CHARACTERS = {
             "I am part of the X-Men.",
             "My real name is Logan."
         ],
-        "traits": ["male", "hero", "mutant", "claws", "healing factor"]
+        "traits": {
+            "is_male": True,
+            "is_hero": True,
+            "is_avenger": False,
+            "is_mutant": True,
+            "is_human": False,
+            "uses_special_weapon": True,
+            "has_healing_factor": True
+        }
     },
     "Deadpool": {
         "hints": [
@@ -99,17 +182,25 @@ MARVEL_CHARACTERS = {
             "I have an incredible healing factor.",
             "My alter-ego is Wade Wilson."
         ],
-        "traits": ["male", "anti-hero", "mercenary", "healing factor"]
+        "traits": {
+            "is_male": True,
+            "is_hero": False, # Anti-hero
+            "is_avenger": False,
+            "is_human": True,
+            "uses_special_weapon": True,
+            "has_healing_factor": True
+        }
     }
 }
 
-# Questions for the computer to ask
+# Questions for the computer to ask, mapped to the new traits
 COMPUTER_QUESTIONS = {
-    "gender": "Is your character a male?",
-    "affiliation": "Is your character an Avenger?",
-    "type": "Does your character have superpowers?",
-    "weapon": "Does your character use a special weapon?",
-    "ability": "Does your character have a healing factor?"
+    "is_male": "Is your character a male?",
+    "is_avenger": "Is your character an Avenger?",
+    "is_hero": "Is your character a hero?",
+    "uses_special_weapon": "Does your character use a special weapon?",
+    "has_healing_factor": "Does your character have a healing factor?",
+    "is_human": "Is your character human?",
 }
 
 def reset_game():
@@ -129,6 +220,7 @@ def reset_game():
     st.session_state.question_asked_this_turn = None
     st.session_state.computer_questions_asked = 0
     st.session_state.computer_question_history = []
+    st.session_state.computer_guess_made = False
 
 def start_game():
     """Initializes the game and chooses a character."""
@@ -192,6 +284,12 @@ def user_guesses_mode():
 def computer_guesses_mode():
     """Handles the game logic when the computer is guessing by asking questions."""
     st.subheader("The Computer is Guessing")
+    
+    # Check if a guess can be made
+    if st.session_state.computer_guess_made:
+        st.info(f"The computer's final guess is: **{st.session_state.computer_guess_made}**")
+        st.button("Continue", on_click=lambda: st.session_state.update(computer_guess_made=False))
+        return
 
     if st.session_state.computer_questions_asked >= 15:
         st.session_state.game_state = "lose"
@@ -203,23 +301,22 @@ def computer_guesses_mode():
     # Check if the computer has enough info to make a guess
     if len(st.session_state.possible_characters) == 1:
         computer_guess = st.session_state.possible_characters[0]
-        st.info(f"The computer's final guess is: **{computer_guess}**")
+        st.session_state.computer_guess_made = computer_guess
         if computer_guess.lower() == st.session_state.secret_character.lower():
             st.session_state.game_state = "win"
             st.balloons()
         else:
             st.session_state.game_state = "lose"
+        return
     else:
         # Computer asks a question
-        question_key = random.choice(list(COMPUTER_QUESTIONS.keys()))
-        while question_key in [q[0] for q in st.session_state.computer_question_history]:
-            if len(st.session_state.computer_question_history) >= len(COMPUTER_QUESTIONS):
-                # Computer can't ask any more unique questions
-                st.session_state.game_state = "lose"
-                st.error("The computer is out of unique questions and loses!")
-                return
-            question_key = random.choice(list(COMPUTER_QUESTIONS.keys()))
-            
+        available_questions = [key for key in COMPUTER_QUESTIONS.keys() if key not in [q[0] for q in st.session_state.computer_question_history]]
+        if not available_questions:
+            st.session_state.game_state = "lose"
+            st.error("The computer is out of unique questions and loses!")
+            return
+        
+        question_key = random.choice(available_questions)
         st.session_state.question_asked_this_turn = question_key
         st.info(f"The computer asks: **{COMPUTER_QUESTIONS[question_key]}**")
         
@@ -230,17 +327,14 @@ def computer_guesses_mode():
             st.session_state.computer_question_history.append((question_key, user_answer))
             
             # Update the list of possible characters based on the answer
-            trait_name = question_key
             new_possible_characters = []
             
             for char_name in st.session_state.possible_characters:
                 char_traits = MARVEL_CHARACTERS[char_name]['traits']
                 
-                # Check if the character has the trait.
-                has_trait = any(trait.lower() == trait_name for trait in char_traits)
-                
-                # Check based on user's answer
-                if (user_answer == "Yes" and has_trait) or (user_answer == "No" and not has_trait):
+                # Check if the character's trait matches the question and answer
+                if (user_answer == "Yes" and char_traits.get(question_key) is True) or \
+                   (user_answer == "No" and char_traits.get(question_key) is False):
                     new_possible_characters.append(char_name)
 
             st.session_state.possible_characters = new_possible_characters
