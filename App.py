@@ -19,7 +19,7 @@ nest_asyncio.apply()
 # It's recommended to store this in Streamlit secrets rather than hardcoding.
 # For demonstration purposes, a placeholder is used here.
 # st.secrets["GEMINI_API_KEY"]
-GOOGLE_API_KEY = "" # Replace with your actual key if not using Streamlit secrets.
+GOOGLE_API_KEY = "AIzaSyCsFXdklVEGwiaj5D__1ex5UFiLtEsy96E"# Replace with your actual key if not using Streamlit secrets.
 if not GOOGLE_API_KEY:
     try:
         GOOGLE_API_KEY = st.secrets["GEMINI_API_KEY"]
