@@ -10,26 +10,86 @@ import random
 import asyncio
 import nest_asyncio
 import re
+import time
 
 # Apply the nest_asyncio patch to allow the use of asyncio.run in Streamlit.
 nest_asyncio.apply()
 
-# --- Gemini API Configuration ---
-# Set your Google API key.
-# It's recommended to store this in Streamlit secrets rather than hardcoding.
-# For demonstration purposes, a placeholder is used here.
-# st.secrets["GEMINI_API_KEY"]
-GOOGLE_API_KEY = "AIzaSyCsFXdklVEGwiaj5D__1ex5UFiLtEsy96E"# Replace with your actual key if not using Streamlit secrets.
-if not GOOGLE_API_KEY:
-    try:
-        GOOGLE_API_KEY = st.secrets["GEMINI_API_KEY"]
-    except:
-        st.error("API Key not found. Please set it in Streamlit secrets.")
-        st.stop()
+# --- Page Configuration and CSS ---
+st.set_page_config(
+    page_title="Marvel Guessing Game",
+    page_icon="🤖",
+    layout="wide"
+)
 
-# Configure the Gemini API.
-genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
+st.markdown("""
+    <style>
+    .reportview-container .main .block-container{
+        max-width: 1000px;
+        padding-top: 2rem;
+        padding-right: 2rem;
+        padding-left: 2rem;
+        padding-bottom: 2rem;
+    }
+    .stChatInput > div > div > input {
+        border-radius: 12px;
+        padding: 10px 15px;
+    }
+    .stButton>button {
+        border-radius: 12px;
+        font-weight: bold;
+        color: white;
+        background-color: #3B82F6;
+        border: none;
+        padding: 10px 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+    .stMarkdown h1 {
+        text-align: center;
+        color: #B42318;
+    }
+    .stMarkdown h3 {
+        text-align: center;
+        color: #1F2937;
+    }
+    .stAlert {
+        border-radius: 12px;
+    }
+    .chat-container {
+        border: 2px solid #ddd;
+        border-radius: 12px;
+        padding: 1rem;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    .chat-message-user, .chat-message-assistant {
+        border-radius: 12px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+    }
+    .chat-message-user {
+        background-color: #DBEAFE;
+        text-align: right;
+        margin-left: 20%;
+    }
+    .chat-message-assistant {
+        background-color: #E5E7EB;
+        text-align: left;
+        margin-right: 20%;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- Gemini API Configuration ---
+def configure_gemini(api_key):
+    """Configures the Gemini API with the provided key."""
+    genai.configure(api_key=api_key)
+    st.session_state.model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
 
 # --- Character and Game Data ---
 # Define a list of Marvel characters with their attributes for each difficulty level.
@@ -83,6 +143,8 @@ def _initialize_session_state():
         st.session_state.ai_possible_characters = []
     if "first_turn" not in st.session_state:
         st.session_state.first_turn = True
+    if "api_key_valid" not in st.session_state:
+        st.session_state.api_key_valid = False
 
 def _new_game():
     """Resets the game state and starts a new game based on selected mode."""
@@ -116,7 +178,10 @@ def _display_chat():
 async def _get_gemini_response(prompt):
     """Makes an asynchronous call to the Gemini API."""
     try:
-        response = await asyncio.to_thread(model.generate_content, prompt)
+        if "model" not in st.session_state:
+            st.error("API model not configured. Please enter a valid API key.")
+            return "Error"
+        response = await asyncio.to_thread(st.session_state.model.generate_content, prompt)
         return response.text
     except Exception as e:
         return f"An error occurred: {e}"
@@ -131,7 +196,7 @@ async def _get_gemini_yes_no(question, character_name, character_attributes):
         f"Question: '{question}'"
     )
     try:
-        response = await asyncio.to_thread(model.generate_content, prompt)
+        response = await asyncio.to_thread(st.session_state.model.generate_content, prompt)
         return response.text
     except Exception as e:
         return f"An error occurred: {e}"
@@ -160,64 +225,43 @@ async def _generate_ai_question_and_guess():
 
 def _handle_ai_guess_response(user_answer):
     """Processes the user's yes/no answer in AI Guesses mode."""
-    # Append user's response to conversation history.
     user_message = {"role": "user", "content": user_answer}
     st.session_state.conversation_history.append(user_message)
     
-    # Check if the AI has asked for a final guess.
     if "Can I make my final guess?" in st.session_state.ai_question:
         if user_answer == "Yes":
             final_guess = random.choice(st.session_state.ai_possible_characters)
             st.session_state.conversation_history.append({"role": "assistant", "content": f"My final guess is **{final_guess['name']}**!"})
             st.session_state.game_active = False
-            return
+            st.balloons()
+            time.sleep(2)
         else:
             st.session_state.conversation_history.append({"role": "assistant", "content": "Darn! Okay, let me ask another question."})
             asyncio.run(_generate_ai_question_and_guess())
             st.session_state.conversation_history.append({"role": "assistant", "content": st.session_state.ai_question})
-            return
+        return
 
-    # Process the user's yes/no answer to the AI's question.
     question_text = st.session_state.ai_question
-    if user_answer == "Yes":
-        # AI's question often contains the attribute itself (e.g., "is a member of the avengers").
-        # We need to extract that attribute.
-        question_words = question_text.lower().split()
-        if "avenger" in question_words or "avengers" in question_words:
-            attribute_to_check = "avenger"
-        elif "asgardian" in question_words:
-            attribute_to_check = "asgardian"
-        elif "super-strength" in question_words:
-            attribute_to_check = "super-strength"
-        elif "human" in question_words:
-            attribute_to_check = "human"
-        elif "magic" in question_words:
-            attribute_to_check = "magic"
-        elif "female" in question_words:
-            attribute_to_check = "female"
-        elif "male" in question_words:
-            attribute_to_check = "male"
-        else:
-            # Fallback for complex questions, the AI will just have to filter based on its own
-            # interpretation of the response.
-            st.session_state.conversation_history.append({"role": "assistant", "content": "Great, thanks! Let me think."})
-            asyncio.run(_generate_ai_question_and_guess())
-            st.session_state.conversation_history.append({"role": "assistant", "content": st.session_state.ai_question})
-            return
-
-        # Filter the possible characters based on the positive answer.
-        st.session_state.ai_known_attributes.append(attribute_to_check)
-        st.session_state.ai_possible_characters = [
-            char for char in st.session_state.ai_possible_characters if attribute_to_check in char['attributes']
-        ]
-
-    else: # User answered "No"
-        st.session_state.conversation_history.append({"role": "assistant", "content": "Okay, thanks! I'll keep that in mind."})
-        # Filtering is tricky here, so we'll let the next AI question handle it.
-        # Simple removal based on a hardcoded list of attributes won't work well
-        # if the AI generates a complex question.
-
-    # Generate the next AI question.
+    if user_answer.lower() == "yes":
+        # Extract attribute from the AI's question to filter characters.
+        # This is a simple, rule-based approach for common attributes.
+        question_words = re.findall(r'\b\w+\b', question_text.lower())
+        found_attribute = None
+        for char in MARVEL_CHARACTERS[st.session_state.difficulty]:
+            for attr in char['attributes']:
+                if attr.lower() in question_words:
+                    found_attribute = attr
+                    break
+            if found_attribute:
+                break
+        
+        if found_attribute:
+            st.session_state.ai_known_attributes.append(found_attribute)
+            st.session_state.ai_possible_characters = [
+                char for char in st.session_state.ai_possible_characters if found_attribute in char['attributes']
+            ]
+        
+    st.session_state.conversation_history.append({"role": "assistant", "content": "Okay, let me think."})
     asyncio.run(_generate_ai_question_and_guess())
     st.session_state.conversation_history.append({"role": "assistant", "content": st.session_state.ai_question})
 
@@ -229,94 +273,114 @@ def _handle_human_guess(user_guess):
     if guess_cleaned == st.session_state.secret_character['name'].lower():
         st.session_state.conversation_history.append({"role": "assistant", "content": f"That's right! The character was **{st.session_state.secret_character['name']}**! You win!"})
         st.session_state.game_active = False
+        st.balloons()
+        st.snow()
     elif st.session_state.guesses_left > 0:
         st.session_state.conversation_history.append({"role": "assistant", "content": f"Nope, that's not me. You have {st.session_state.guesses_left} guesses left. Try another question!"})
     else:
         st.session_state.conversation_history.append({"role": "assistant", "content": f"You're out of guesses! The character was **{st.session_state.secret_character['name']}**. Better luck next time!"})
         st.session_state.game_active = False
+        st.error("😭")
+        st.error("😞")
+        st.error("😔")
+        time.sleep(2)
 
 def _handle_human_question(question_text):
     """Processes the user's yes/no question in You Guess mode."""
-    # Get the AI's response asynchronously.
     response_text = asyncio.run(_get_gemini_yes_no(question_text, st.session_state.secret_character['name'], st.session_state.secret_character['attributes']))
     st.session_state.conversation_history.append({"role": "assistant", "content": response_text})
 
 # --- Streamlit App UI ---
-
-# Initialize session state on app load.
 _initialize_session_state()
 
 st.title("Guess the Marvel Character")
 st.markdown("I'm thinking of a Marvel character. Can you guess who it is?")
 
+# API Key input section
+with st.container():
+    api_key = st.text_input("Enter your Gemini API Key:", type="password")
+    if st.button("Submit Key"):
+        if api_key:
+            try:
+                configure_gemini(api_key)
+                st.session_state.api_key_valid = True
+                st.success("API Key is valid. You can start a new game now!")
+            except Exception as e:
+                st.session_state.api_key_valid = False
+                st.error(f"Invalid API Key: {e}. Please try again.")
+        else:
+            st.error("Please enter an API key.")
+
 # Sidebar for game settings
-with st.sidebar:
-    st.header("Game Settings")
-    st.session_state.game_mode = st.radio(
-        "Choose Game Mode:",
-        options=["You Guess", "AI Guesses"],
-        help="In 'You Guess' mode, you ask questions. In 'AI Guesses' mode, you answer questions."
-    )
+if st.session_state.api_key_valid:
+    with st.sidebar:
+        st.header("Game Settings")
+        st.session_state.game_mode = st.radio(
+            "Choose Game Mode:",
+            options=["You Guess", "AI Guesses"],
+            help="In 'You Guess' mode, you ask questions. In 'AI Guesses' mode, you answer questions."
+        )
 
-    st.session_state.difficulty = st.selectbox(
-        "Select Difficulty:",
-        options=["Easy", "Medium", "Hard"],
-        index=0,
-        help="Easy: 4 characters, Medium: 6 characters, Hard: 6 characters"
-    )
+        st.session_state.difficulty = st.selectbox(
+            "Select Difficulty:",
+            options=["Easy", "Medium", "Hard"],
+            index=0,
+            help="Easy: 4 characters, Medium: 6 characters, Hard: 6 characters"
+        )
 
-    if st.button("New Game", type="primary"):
-        _new_game()
-        st.rerun()
+        if st.button("New Game", type="primary"):
+            _new_game()
+            st.rerun()
 
-# --- Main Game Loop and UI ---
-if not st.session_state.game_active:
-    st.info("Start a new game using the 'New Game' button in the sidebar!")
-else:
-    # Display the game's message board
-    _display_chat()
+    # --- Main Game Loop and UI ---
+    if not st.session_state.game_active:
+        st.info("Start a new game using the 'New Game' button in the sidebar!")
+    else:
+        # Display the game's message board
+        with st.container(height=400, border=True):
+            _display_chat()
 
-    if st.session_state.game_mode == "You Guess":
-        if st.session_state.game_active:
-            # User input for questions and guesses
-            prompt = st.chat_input("Ask a yes/no question or guess the character (e.g., 'Is the character male?' or 'Is the character Thor?')")
-            if prompt:
-                # Add user message to history
-                user_message = {"role": "user", "content": prompt}
-                st.session_state.conversation_history.append(user_message)
+        if st.session_state.game_mode == "You Guess":
+            if st.session_state.game_active:
+                # User input for questions and guesses
+                prompt = st.chat_input("Ask a yes/no question or guess the character (e.g., 'Is the character male?' or 'Is the character Thor?')")
+                if prompt:
+                    # Add user message to history
+                    user_message = {"role": "user", "content": prompt}
+                    st.session_state.conversation_history.append(user_message)
 
-                # Differentiate between a question and a guess
-                is_guess = any(char['name'].lower() in prompt.lower() for char in MARVEL_CHARACTERS[st.session_state.difficulty])
-                if "guess" in prompt.lower() or is_guess:
-                    _handle_human_guess(prompt)
+                    # Differentiate between a question and a guess
+                    is_guess = any(char['name'].lower() in prompt.lower() for char in MARVEL_CHARACTERS[st.session_state.difficulty])
+                    if "guess" in prompt.lower() or is_guess:
+                        _handle_human_guess(prompt)
+                    else:
+                        _handle_human_question(prompt)
+                    st.rerun()
+
+        else: # AI Guesses mode
+            if st.session_state.game_active:
+                st.markdown("I'll ask the questions, you just have to answer!")
+                
+                # The AI's last question is stored and displayed. Now the user needs to respond.
+                if "I think I know who it is." in st.session_state.ai_question:
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("Yes", key="final_guess_yes"):
+                            _handle_ai_guess_response("Yes")
+                            st.rerun()
+                    with col2:
+                        if st.button("No", key="final_guess_no"):
+                            _handle_ai_guess_response("No")
+                            st.rerun()
                 else:
-                    _handle_human_question(prompt)
-                st.rerun()
-
-    else: # AI Guesses mode
-        if st.session_state.game_active:
-            st.markdown("I'll ask the questions, you just have to answer!")
-            
-            # The AI's last question is stored and displayed. Now the user needs to respond.
-            if "I think I know who it is." in st.session_state.ai_question:
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("Yes", key="final_guess_yes"):
-                        _handle_ai_guess_response("Yes")
-                        st.rerun()
-                with col2:
-                    if st.button("No", key="final_guess_no"):
-                        _handle_ai_guess_response("No")
-                        st.rerun()
-            else:
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("Yes", key="answer_yes"):
-                        _handle_ai_guess_response("Yes")
-                        st.rerun()
-                with col2:
-                    if st.button("No", key="answer_no"):
-                        _handle_ai_guess_response("No")
-                        st.rerun()
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("Yes", key="answer_yes"):
+                            _handle_ai_guess_response("Yes")
+                            st.rerun()
+                    with col2:
+                        if st.button("No", key="answer_no"):
+                            _handle_ai_guess_response("No")
+                            st.rerun()
 
 # End of code block marker
